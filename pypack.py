@@ -13,9 +13,9 @@ if __name__ == "__main__":
                       action="store_true", dest="verbose", default=False,
                       help="print additional output to stdout")
     (options, args) = parser.parse_args()
-    print options
-    print type(options)
-    print args
+    #print options
+    #print type(options)
+    #print args
 
     tar_output_file = args[0]
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     for scriptfile in args[1:]:
 
         # Start the code you want to study
-        print("Assemling dependencies for %s" % (scriptfile))
+        print("Assembling dependencies for %s" % (scriptfile))
         mf = modulefinder.ModuleFinder()
         mf.run_script(scriptfile)
         master_modules_dict.update(mf.modules)
