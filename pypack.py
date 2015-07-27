@@ -15,6 +15,9 @@ if __name__ == "__main__":
     parser.add_option("-x", "--verbose2",
                       action="store_true", dest="verbose2", default=False,
                       help="print additional output to stdout")
+    parser.add_option("-d", "--dry",
+                      action="store_true", dest="dryrun", default=False,
+                      help="dry run, do not tar any files")
     (options, args) = parser.parse_args()
     #print options
     #print type(options)
@@ -117,7 +120,8 @@ if __name__ == "__main__":
                 # We have only a file locator, so this is likely a single-file module
                 if (options.verbose2):
                     print "%30s: %s" % (module_name, _file)
-                tar.add(_file, filter=strip_path)
+                if (not options.dryrun):
+                    tar.add(_file, filter=strip_path)
             elif (_path != None):
                 # We have a full path
                 # Go through the directory recursively, and add all files
@@ -142,7 +146,8 @@ if __name__ == "__main__":
                         file_path = os.path.join(root, filename)
                         real_path = os.path.realpath(file_path)
                         #print file_path, file_path[len(master_dir):]
-                        tar.add(real_path, filter=strip_master_dir)
+                        if (not options.dryrun):
+                            tar.add(real_path, filter=strip_master_dir)
 
 
     #tar.add("foo", filter=reset)
