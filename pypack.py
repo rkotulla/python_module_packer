@@ -1,86 +1,63 @@
 #!/usr/bin/env python
 
-import os, sys, numpy
-import scipy.stats, scipy.special
-import scipy
-
+import os, sys
 import types
-
-sys.path.append("/work/podi_prep56")
-import podi_sitesetup as ss
-import podi_imcombine
-
-#sys.modules.keys()
-#for x in sys.modules: #.keys():
-#    print x, type(x)
-
-# modulenames = set(sys.modules)&set(globals())
-# allmodules = [sys.modules[name] for name in modulenames]
-# for am in allmodules:
-#     print am, type(am)
-#     print am.globals()
-
 import modulefinder
-
+import optparse
 
 if __name__ == "__main__":
 
-    # Start the code you want to study
-    mf = modulefinder.ModuleFinder()
-    mf.run_script([
-        "/work/podi_devel/podi_imcombine.py",
-        "/work/podi_devel/podi_collectcells.py",
-    ])
-    #mf.report()
+    
+    parser = optparse.OptionParser()
+    parser.add_option("-v", "--verbose",
+                      action="store_true", dest="verbose", default=False,
+                      help="print additional output to stdout")
+    (options, args) = parser.parse_args()
+    print options
+    print type(options)
+    print args
 
-
-    # # get list of modules
-    # modules = []
-    # for name, val in globals().items():
-    #     print
-    #     if isinstance(val, types.ModuleType):
-    #         print val.__name__
-    #         try:
-    #             print "PATH:", val.__path__,"\n",
-    #         except:
-    #             pass
-
-    #         try:
-    #             print "FILE:", val.__file__,"\n",
-    #         except:
-    #             pass
-
-    #         modules.append(val)
+    tar_output_file = args[0]
 
     master_modules = []
-    modules = []
-    for mod in mf.modules:
-        modules.append(mod)
-        mod_parts = mod.split(".")
-        master_modules.append(mod_parts[0])
 
-    print modules
-    print type(modules)
-    modules.sort()
-    print "\n".join(modules)
+    master_modules_dict = {}
 
-    print "------------------------------------"
-    
+    #
+    # Now study all scripts and assemble a list of master modules
+    #
+    for scriptfile in args[1:]:
+
+        # Start the code you want to study
+        print("Assemling dependencies for %s" % (scriptfile))
+        mf = modulefinder.ModuleFinder()
+        mf.run_script(scriptfile)
+        master_modules_dict.update(mf.modules)
+
+        modules = []
+        for mod in mf.modules:
+            modules.append(mod)
+            mod_parts = mod.split(".")
+            master_modules.append(mod_parts[0])
+
+        #print type(mf.modules)
+        #print modules
+        #print type(modules)
+        #modules.sort()
+        #print "\n".join(modules)
+
+    #print "------------------------------------"
+
     master_modules = list(set(master_modules))
     master_modules.sort()
-    print "\n".join(master_modules)
-
-#    sys.exit(0)
+    if (options.verbose):
+        print "Collecting necessary files for the following modules:"
+        print " -- ","\n -- ".join(master_modules)
 
     #
     # Now create a tar-file with all files we might need
     #
     import tarfile, glob
-
-    # def reset(tarinfo):
-    #     tarinfo.uid = tarinfo.gid = 0
-    #     tarinfo.uname = tarinfo.gname = "root"
-    #     return tarinfo
 
     def strip_path(tarinfo):
         #print tarinfo
@@ -98,16 +75,8 @@ if __name__ == "__main__":
     def strip_master_dir(tarinfo):
         if (tarinfo.islnk()):
             #print "Removing hard link from filelist"
-            print "HARDLINK:", tarinfo.type, tarinfo.linkname
+            #print "HARDLINK:", tarinfo.type, tarinfo.linkname
             tarinfo.type = tarfile.REGTYPE
-            #return None
-            
-        # elif (tarinfo.isdev()):
-        #     print "Removing devics (block device, character device, or FIFO"
-        #     return None
-        # elif (tarinfo.issym()):
-        #     print "This is a symbolic link"
-        #     return None
 
         if (tarinfo.name.startswith(master_dir)):
             tarinfo.name = tarinfo.name[len(master_dir):]
@@ -116,14 +85,20 @@ if __name__ == "__main__":
         return tarinfo
 
 
-    tar = tarfile.open("sample.tar.gz", "w:gz")
+    tar = tarfile.open(tar_output_file, "w:gz")
 
-    add_files = True #False
+    add_files = True
     if (add_files):
+
         print "\n\n\nAdding files to tar file"
         # Now add all files we might need for each of the modules
         for module_name in master_modules:
-            module = mf.modules[module_name]
+            
+            #import_cmd = "import %s as module" % (module_name)
+            #exec(import_cmd)
+            
+            # module = mf.modules[module_name]
+            module = master_modules_dict[module_name]
             try:
                 _path = module.__path__
             except:
