@@ -12,6 +12,9 @@ if __name__ == "__main__":
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
                       help="print additional output to stdout")
+    parser.add_option("-x", "--verbose2",
+                      action="store_true", dest="verbose2", default=False,
+                      help="print additional output to stdout")
     (options, args) = parser.parse_args()
     #print options
     #print type(options)
@@ -113,7 +116,8 @@ if __name__ == "__main__":
 
             if (_path == None and _file != None):
                 # We have only a file locator, so this is likely a single-file module
-                #print "F", _file
+                if (options.verbose2):
+                    print "%30s: %s" % (module_name, _file)
                 tar.add(_file, filter=strip_path)
             elif (_path != None):
                 # We have a full path
@@ -122,6 +126,9 @@ if __name__ == "__main__":
                 md, bn = os.path.split(_path[0])
                 #print "D", _path[0]
                 master_dir = md[1:]+"/" #_path[0][1:]+"/"
+                if (options.verbose2):
+                    print "%30s: %s (%s)" % (module_name, _path, master_dir)
+
                 for root, subdirs, files in os.walk(_path[0]):
                     # for subdir in subdirs:
                     #     print('\t- subdirectory ' + subdir)
