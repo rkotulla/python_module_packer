@@ -49,11 +49,10 @@ if __name__ == "__main__":
         #modules.sort()
         #print "\n".join(modules)
 
-    #print "------------------------------------"
-
     master_modules = list(set(master_modules))
     master_modules.sort()
     if (options.verbose):
+        print "\n------------------------------------\n"
         print "Collecting necessary files for the following modules:"
         print " -- ","\n -- ".join(master_modules)
 
@@ -93,7 +92,7 @@ if __name__ == "__main__":
     add_files = True
     if (add_files):
 
-        print "\n\n\nAdding files to tar file"
+        print "Adding files to tar file"
         # Now add all files we might need for each of the modules
         for module_name in master_modules:
             
@@ -123,9 +122,12 @@ if __name__ == "__main__":
                 # We have a full path
                 # Go through the directory recursively, and add all files
 
-                md, bn = os.path.split(_path[0])
-                #print "D", _path[0]
-                master_dir = md[1:]+"/" #_path[0][1:]+"/"
+                realpath = os.path.realpath(_path[0])
+                master_dir, bn = os.path.split(realpath)
+                if (master_dir.startswith("/")):
+                    master_dir = master_dir[1:]
+                if (not master_dir.endswith("/")):
+                    master_dir += "/"
                 if (options.verbose2):
                     print "%30s: %s (%s)" % (module_name, _path, master_dir)
 
